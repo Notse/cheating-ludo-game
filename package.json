@@ -1,0 +1,14 @@
+{
+  "name": "ludo-game-server",
+  "version": "1.0.0",
+  "description": "Server for the online Ludo game",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "nodemon": "^3.1.10",
+    "socket.io": "^4.8.1"
+  }
+}
