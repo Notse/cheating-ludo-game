@@ -87,6 +87,15 @@ export class UI {
     static setDiceValue(value) {
         document.querySelector('.dice-value').innerText = value;
     }
+
+    static showWaitingMessage(visible) {
+        const messageElement = document.querySelector('#waiting-message');
+        if (visible) {
+            messageElement.classList.remove('hidden');
+        } else {
+            messageElement.classList.add('hidden');
+        }
+    }
 }
 
 // UI.setPiecePosition('P1', 0, 0);

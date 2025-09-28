@@ -1,6 +1,7 @@
 
-import { BASE_POSITIONS, HOME_ENTRANCE, HOME_POSITIONS, PLAYERS, SAFE_POSITIONS, START_POSITIONS, STATE, TURNING_POINTS } from './constants.js';
-import { UI } from './UI.js';
+import { PLAYERS, STATE } from './constants.js';
+import { UI } from './UI.js'
+import { GameLogic } from '../GameLogic.js';
 
 export class Ludo {
     currentPositions = {
@@ -8,14 +9,16 @@ export class Ludo {
         P2: []
     }
 
+    socket;
+    room;
+    player;
+    logic;
     _diceValue;
     get diceValue() {
         return this._diceValue;
     }
     set diceValue(value) {
         this._diceValue = value;
-
-        UI.setDiceValue(value);
     }
 
     _turn;
@@ -42,22 +45,18 @@ export class Ludo {
         }
     }
 
-    constructor() {
+    constructor(socket, room, player) {
         console.log('Hello World! Lets play Ludo!');
+        this.socket = socket;
+        this.room = room;
+        this.player = player;
+        this.logic = new GameLogic();
 
-        // this.diceValue = 4;
-        // this.turn = 0;
-        // this.state = STATE.DICE_ROLLED;
         this.listenDiceClick();
         this.listenResetClick();
         this.listenPieceClick();
 
         this.resetGame();
-        // this.setPiecePosition('P1', 0, 0);
-        // this.setPiecePosition('P2', 0, 1);
-        // this.diceValue = 6;
-        // console.log(this.getEligiblePieces('P1'))
-        
     }
 
     listenDiceClick() {
@@ -65,72 +64,40 @@ export class Ludo {
     }
 
     onDiceClick() {
-        console.log('dice clicked!');
-        this.diceValue = 1 + Math.floor(Math.random() * 6);
-        this.state = STATE.DICE_ROLLED;
-        
-        this.checkForEligiblePieces();
-    }
+        if (this.state !== STATE.DICE_NOT_ROLLED) return;
 
-    checkForEligiblePieces() {
-        const player = PLAYERS[this.turn];
-        // eligible pieces of given player
-        const eligiblePieces = this.getEligiblePieces(player);
-        if(eligiblePieces.length) {
-            // highlight the pieces
-            UI.highlightPieces(player, eligiblePieces);
-        } else {
-            this.incrementTurn();
+        const activePlayer = this.turn === 0 ? 'P1' : 'P2';
+        if (this.player !== activePlayer) {
+            console.log("Not your turn!");
+            return;
         }
-    }
 
-    incrementTurn() {
-        this.turn = this.turn === 0 ? 1 : 0;
-        this.state = STATE.DICE_NOT_ROLLED;
-    }
-
-    getEligiblePieces(player) {
-        return [0, 1, 2, 3].filter(piece => {
-            const currentPosition = this.currentPositions[player][piece];
-
-            if(currentPosition === HOME_POSITIONS[player]) {
-                return false;
-            }
-
-            if(
-                BASE_POSITIONS[player].includes(currentPosition)
-                && this.diceValue !== 6
-            ){
-                return false;
-            }
-
-            if(
-                HOME_ENTRANCE[player].includes(currentPosition)
-                && this.diceValue > HOME_POSITIONS[player] - currentPosition
-                ) {
-                return false;
-            }
-
-            return true;
-        });
+        console.log('dice clicked! sending to server...');
+        UI.disableDice();
+        this.socket.emit('diceRoll');
     }
 
     listenResetClick() {
-        UI.listenResetClick(this.resetGame.bind(this))
+        UI.listenResetClick(() => window.location.reload());
     }
 
     resetGame() {
         console.log('reset game');
-        this.currentPositions = structuredClone(BASE_POSITIONS);
+        this.logic.reset();
+        this.currentPositions = this.logic.currentPositions;
 
+        this.drawPieces();
+
+        this.turn = 0;
+        this.state = STATE.DICE_NOT_ROLLED;
+    }
+
+    drawPieces() {
         PLAYERS.forEach(player => {
             [0, 1, 2, 3].forEach(piece => {
                 this.setPiecePosition(player, piece, this.currentPositions[player][piece])
             })
         });
-
-        this.turn = 0;
-        this.state = STATE.DICE_NOT_ROLLED;
     }
 
     listenPieceClick() {
@@ -146,22 +113,20 @@ export class Ludo {
         console.log('piece clicked')
 
         const player = target.getAttribute('player-id');
-        const piece = target.getAttribute('piece');
+        const piece = parseInt(target.getAttribute('piece'));
+
+        if (player !== this.player) {
+            console.log("Not your piece!");
+            return;
+        }
+
         this.handlePieceClick(player, piece);
     }
 
     handlePieceClick(player, piece) {
         console.log(player, piece);
-        const currentPosition = this.currentPositions[player][piece];
-        
-        if(BASE_POSITIONS[player].includes(currentPosition)) {
-            this.setPiecePosition(player, piece, START_POSITIONS[player]);
-            this.state = STATE.DICE_NOT_ROLLED;
-            return;
-        }
-
         UI.unhighlightPieces();
-        this.movePiece(player, piece, this.diceValue);
+        this.socket.emit('pieceMove', { player, piece });
     }
 
     setPiecePosition(player, piece, newPosition) {
@@ -169,69 +134,26 @@ export class Ludo {
         UI.setPiecePosition(player, piece, newPosition)
     }
 
-    movePiece(player, piece, moveBy) {
-        // this.setPiecePosition(player, piece, this.currentPositions[player][piece] + moveBy)
+    animatePieceMove({ path, killInfo, piece }) {
+        if (!path || path.length === 0) return;
+
+        const player = this.turn === 0 ? 'P1' : 'P2';
+
+        if (piece === undefined) return;
+
+        let pathIndex = 0;
         const interval = setInterval(() => {
-            this.incrementPiecePosition(player, piece);
-            moveBy--;
-
-            if(moveBy === 0) {
+            const currentPathPosition = path[pathIndex];
+            this.setPiecePosition(player, piece, currentPathPosition);
+            this.currentPositions[player][piece] = currentPathPosition; // Update local state
+            pathIndex++;
+            if (pathIndex >= path.length) {
                 clearInterval(interval);
-
-                // check if player won
-                if(this.hasPlayerWon(player)) {
-                    alert(`Player: ${player} has won!`);
-                    this.resetGame();
-                    return;
+                if (killInfo) {
+                    this.setPiecePosition(killInfo.player, killInfo.piece, killInfo.newPosition);
+                    this.currentPositions[killInfo.player][killInfo.piece] = killInfo.newPosition;
                 }
-
-                const isKill = this.checkForKill(player, piece);
-
-                if(isKill || this.diceValue === 6) {
-                    this.state = STATE.DICE_NOT_ROLLED;
-                    return;
-                }
-
-                this.incrementTurn();
             }
         }, 200);
-    }
-
-    checkForKill(player, piece) {
-        const currentPosition = this.currentPositions[player][piece];
-        const opponent = player === 'P1' ? 'P2' : 'P1';
-
-        let kill = false;
-
-        [0, 1, 2, 3].forEach(piece => {
-            const opponentPosition = this.currentPositions[opponent][piece];
-
-            if(currentPosition === opponentPosition && !SAFE_POSITIONS.includes(currentPosition)) {
-                this.setPiecePosition(opponent, piece, BASE_POSITIONS[opponent][piece]);
-                kill = true
-            }
-        });
-
-        return kill
-    }
-
-    hasPlayerWon(player) {
-        return [0, 1, 2, 3].every(piece => this.currentPositions[player][piece] === HOME_POSITIONS[player])
-    }
-
-    incrementPiecePosition(player, piece) {
-        this.setPiecePosition(player, piece, this.getIncrementedPosition(player, piece));
-    }
-    
-    getIncrementedPosition(player, piece) {
-        const currentPosition = this.currentPositions[player][piece];
-
-        if(currentPosition === TURNING_POINTS[player]) {
-            return HOME_ENTRANCE[player][0];
-        }
-        else if(currentPosition === 51) {
-            return 0;
-        }
-        return currentPosition + 1;
     }
 }

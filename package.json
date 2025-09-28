@@ -2,7 +2,7 @@
   "name": "ludo-game-server",
   "version": "1.0.0",
   "description": "Server for the online Ludo game",
-  "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js"
   },
