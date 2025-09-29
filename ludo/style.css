@@ -39,12 +39,12 @@ body {
 }
 
 .player-piece {
-    width: 3%;
-    height: 3%;
-    border: 2px solid;
-    border-radius: 10px;
+    width: 4%;
+    height: 4%;
+    border: 3px solid;
+    border-radius: 100%;
     position: absolute;
-    transform: translate(50%, 50%);
+    transform: translate(40%, 40%);
     transition: all .2s;
 
     z-index: 1;
