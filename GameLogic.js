@@ -64,7 +64,7 @@ export class GameLogic {
 
         if (BASE_POSITIONS[player].includes(currentPosition) && this.diceValue === 6) {
             this.setPiecePosition(player, piece, START_POSITIONS[player]);
-            return { path: [START_POSITIONS[player]], killInfo: null };
+            return { path: [START_POSITIONS[player]], killInfo: null, reachedHome: false };
         }
 
         const path = [];
@@ -76,8 +76,9 @@ export class GameLogic {
 
         this.setPiecePosition(player, piece, newPosition);
         const killInfo = this.checkForKill(player, piece);
+        const reachedHome = newPosition === HOME_POSITIONS[player];
 
-        return { path, killInfo };
+        return { path, killInfo, reachedHome };
     }
 
     setPiecePosition(player, piece, newPosition) {

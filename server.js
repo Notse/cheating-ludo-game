@@ -102,7 +102,7 @@ async function handlePieceMove(socket, player, piece, ludoGame, room) {
 
     io.to(room).emit('pieceMoved', { ...moveInfo, piece });
 
-    if (moveInfo.killInfo || ludoGame.diceValue === 6) {
+    if (moveInfo.killInfo || ludoGame.diceValue === 6 || moveInfo.reachedHome) {
         // Same player's turn again
         ludoGame.state = 'DICE_NOT_ROLLED';
         io.to(room).emit('turnChange', { turn: ludoGame.turn });
