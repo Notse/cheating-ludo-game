@@ -32,7 +32,7 @@ musicBtn.addEventListener('click', toggleMusic);
 // Set volume for sounds
 backgroundMusic.volume = 0.3; // Background music should be quieter
 
-function playMoveSound() {
+export function playMoveSound() {
     moveSound.currentTime = 0; // Rewind to the start
     moveSound.play().catch(e => console.error("Move sound failed:", e));
 }
@@ -103,8 +103,6 @@ socket.on('pieceMoved', (moveInfo) => {
         // We assume the property is named 'capturedPiece'.
         if (moveInfo.capturedPiece) {
             playCaptureSound();
-        } else {
-            playMoveSound();
         }
         ludo.animatePieceMove(moveInfo);
     }

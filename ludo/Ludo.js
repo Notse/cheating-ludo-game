@@ -1,5 +1,6 @@
 
 import { PLAYERS, STATE } from './constants.js';
+import { playMoveSound } from '../main.js';
 import { UI } from './UI.js'
 import { GameLogic } from '../GameLogic.js';
 
@@ -145,6 +146,7 @@ export class Ludo {
         const interval = setInterval(() => {
             const currentPathPosition = path[pathIndex];
             this.setPiecePosition(player, piece, currentPathPosition);
+            playMoveSound(); // Play sound for each step
             this.currentPositions[player][piece] = currentPathPosition; // Update local state
             pathIndex++;
             if (pathIndex >= path.length) {
