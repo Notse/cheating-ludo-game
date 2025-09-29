@@ -2,15 +2,32 @@
     box-sizing: border-box;
 }
 
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    background-color: #f0f0f0;
+    overflow: hidden; /* Prevent scrollbars */
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .ludo-container {
-    width: 450px;
-    margin: 20px auto;
+    width: 95vmin; /* Use the smaller of viewport width or height */
+    max-width: 500px; /* Max size on large screens */
+    max-height: 95vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .ludo-container .ludo {
-
-    height: 450px;
     width: 100%;
+    aspect-ratio: 1 / 1; /* Maintain a square shape */
     background-image: url('./ludo-bg.jpg');
     background-size: contain;
     position: relative;
@@ -60,12 +77,12 @@
     background-color: #00b550;
 }
 
-.player-base {
+/* .player-base {
     width: 40%;
     height: 40%;
     border: 30px solid;
     position: absolute;
-}
+} */
 
 .player-bases [player-id="P1"].player-base {
     bottom: 0;
@@ -106,16 +123,38 @@
 }
 
 .row {
+    width: 100%;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     margin-top: 15px;
+    gap: 10px;
 }
 
 .dice-value {
+    flex-shrink: 0;
     font-size: 24px;
     font-weight: bold;
 }
 
 .hidden {
     display: none;
+}
+
+@media (max-width: 480px) {
+    .ludo-container {
+        justify-content: center;
+        height: 100%;
+    }
+
+    .footer {
+        padding: 0 10px;
+    }
+
+    .btn {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+
+    h2.active-player { font-size: 1em; }
 }
