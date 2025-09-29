@@ -33,6 +33,16 @@ body {
     position: relative;
 }
 
+.ludo.rotated {
+    transform: rotate(180deg);
+}
+
+/* This counter-rotates the pieces so they remain upright on a rotated board */
+.ludo.rotated .player-piece {
+    transform: translate(40%, 40%) rotate(-180deg);
+}
+
+
 .player-pieces {
     height: 100%;
     width: 100%;
@@ -57,6 +67,11 @@ body {
     border: 2px dashed;
     animation: spin 1s infinite linear;
 }
+
+.ludo.rotated .player-piece.highlight {
+    animation: spin-rotated 1s infinite linear;
+}
+
 @keyframes spin {
     0% {
         transform: translate(50%, 50%) rotate(0deg);
@@ -71,6 +86,18 @@ body {
 
 [player-id="P1"].player-piece {
     background-color: #2eafff;
+}
+
+@keyframes spin-rotated {
+    0% {
+        transform: translate(50%, 50%) rotate(-180deg);
+    }
+    50% {
+        transform: translate(50%, 50%) rotate(0deg) scale(1.4);
+    }
+    100% {
+        transform: translate(50%, 50%) rotate(-180deg);
+    }
 }
 
 [player-id="P2"].player-piece {

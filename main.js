@@ -69,6 +69,12 @@ socket.on('gameStart', (data) => {
     ludo.currentPositions = data.initialState;
     ludo.drawPieces();
     UI.showWaitingMessage(false);
+
+    // Rotate the board for Player 2 for a better perspective
+    if (player === 'P2') {
+        document.querySelector('.ludo').classList.add('rotated');
+    }
+
     console.log(`Game started! You are ${player}`);
 });
 
