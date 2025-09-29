@@ -40,8 +40,8 @@ socket.on('turnChange', ({ turn }) => {
 
 socket.on('diceRolled', ({ diceValue, eligiblePieces, player: activePlayer }) => {
     if (ludo) {
+        ludo.diceValue = diceValue; // Update dice value first
         UI.setDiceValue(diceValue);
-        ludo.diceValue = diceValue;
         if (activePlayer === player && eligiblePieces.length > 0) {
             ludo.state = 'DICE_ROLLED';
             UI.highlightPieces(player, eligiblePieces);
